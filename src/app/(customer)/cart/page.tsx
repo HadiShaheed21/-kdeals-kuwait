@@ -1,0 +1,27 @@
+'use client';
+
+import { MessageCircle, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { ManagedImage } from '@/ui/media/ManagedImage';
+import Link from 'next/link';
+import { useCart } from '@/context/CartContext';
+import { getCartLineId } from '@/lib/cart';
+import { formatKwd } from '@/lib/currency';
+import { useI18n } from '@/lib/i18n';
+
+export default function CartPage() {
+  const { t, locale } = useI18n();
+  const { items, count, total, clear, updateQuantity, remove } = useCart();
+
+  return (
+    <main className="bg-slate-50 py-6 sm:py-8">
+      <div className="container"><div className="mx-auto max-w-4xl">
+        <div className="mb-5 flex items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-orange-600">K DEALS</p><h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{t('cart.title')}</h1><p className="mt-1 text-sm text-slate-500">{count} {count === 1 ? 'item' : 'items'}</p></div>{items.length > 0 && <button type="button" onClick={clear} className="min-h-10 text-sm font-bold text-red-600 hover:text-red-800">Clear cart</button>}</div>
+
+        {items.length === 0 ? <section className="rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center shadow-sm"><ShoppingBag aria-hidden="true" className="mx-auto h-11 w-11 text-purple-600" strokeWidth={1.5} /><h2 className="mt-4 text-xl font-bold text-slate-900">Your cart is empty</h2><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">Looks like you haven&apos;t added any items to your cart yet.</p><Link href={`/${locale}/products`} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-bold text-white transition hover:bg-orange-600">{t('cart.keep_shopping')}</Link></section> : <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+          <section className="space-y-3">{items.map((item) => <article key={getCartLineId(item)} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4"><div className="flex gap-3"><div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 sm:h-24 sm:w-24"><ManagedImage src={item.image} alt={item.name} fill sizes="(max-width: 640px) 80px, 96px" className="object-contain p-2" /></div><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="line-clamp-2 text-sm font-bold leading-5 text-slate-900 sm:text-base">{item.name}</p><p className="mt-1 line-clamp-1 text-xs text-slate-500">{item.nameAr}</p>{item.variantId && <p className="mt-1 text-xs font-medium text-purple-700">{item.variantId}</p>}</div><button type="button" onClick={() => remove(item.productId, item.variantId)} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-red-600 hover:bg-red-50" aria-label={`Remove ${item.name}`}><Trash2 aria-hidden="true" className="h-4 w-4" /></button></div><div className="mt-3 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs text-slate-500">Price</p><p className="font-extrabold text-slate-900">{formatKwd(item.price)}</p></div><div className="inline-flex min-h-10 items-center rounded-xl border border-slate-200"><button type="button" aria-label={`Decrease quantity of ${item.name}`} disabled={item.quantity <= 1} onClick={() => updateQuantity(item.productId, item.variantId, item.quantity - 1)} className="inline-flex h-10 w-10 items-center justify-center text-slate-700 disabled:opacity-35"><Minus aria-hidden="true" className="h-4 w-4" /></button><span className="w-8 text-center text-sm font-bold text-slate-900">{item.quantity}</span><button type="button" aria-label={`Increase quantity of ${item.name}`} onClick={() => updateQuantity(item.productId, item.variantId, item.quantity + 1)} className="inline-flex h-10 w-10 items-center justify-center text-slate-700"><Plus aria-hidden="true" className="h-4 w-4" /></button></div></div></div></div></article>)}</section>
+          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"><h2 className="text-lg font-extrabold text-slate-900">Order summary</h2><div className="mt-4 space-y-3 border-b border-slate-100 pb-4 text-sm"><div className="flex justify-between"><span className="text-slate-500">Subtotal</span><span className="font-bold text-slate-900">{formatKwd(total)}</span></div><div className="flex justify-between"><span className="text-slate-500">Delivery</span><span className="font-semibold text-amber-700">To be confirmed</span></div></div><div className="mt-4 flex justify-between"><span className="text-lg font-extrabold text-slate-900">Payable total</span><span className="text-sm font-extrabold text-amber-700">To be confirmed</span></div><Link href={`/${locale}/checkout`} className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-extrabold text-white transition hover:bg-[#20bd5a]"><MessageCircle aria-hidden="true" className="h-5 w-5" />{t('checkout.whatsapp_checkout')}</Link><Link href={`/${locale}/products`} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-orange-500 px-4 text-sm font-bold text-orange-600 transition hover:bg-orange-500 hover:text-white">{t('cart.keep_shopping')}</Link></aside>
+        </div>}
+      </div></div>
+    </main>
+  );
+}

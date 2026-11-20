@@ -1,0 +1,327 @@
+/**
+ * Extended demo product data for product detail pages.
+ * Adds slugs, descriptions, variants, stock, and categoryId to existing products.
+ */
+import { allProducts } from './products';
+
+export interface DemoProduct {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameAr: string;
+  descriptionEn?: string;
+  descriptionAr?: string;
+  image: string;
+  images?: string[];
+  originalPrice: number;
+  price: number;
+  discountPercent: number;
+  stock: number;
+  categoryId: string;
+  isBestseller: boolean;
+  isNew: boolean;
+  badgeLabel?: string;
+  variants?: {
+    id: string;
+    attributes: Record<string, string>;
+    priceAdjustment: number;
+    stock: number;
+  }[];
+}
+
+export const extendedProducts: DemoProduct[] = [
+  {
+    id: 'p1',
+    slug: 'wireless-bluetooth-headphones-pro',
+    nameEn: 'Wireless Bluetooth Headphones Pro',
+    nameAr: 'سماعات لاسلكية برو',
+    descriptionEn: 'Premium wireless Bluetooth headphones with active noise cancellation, 30-hour battery life, and comfortable over-ear design. Perfect for music, calls, and travel.',
+    descriptionAr: 'سماعات لاسلكية فاخرة بتقنية بلوتوث مع إلغاء الضوضاء النشط، وعمر بطارية 30 ساعة، وتصميم مريح فوق الأذن. مثالية للموسيقى والمكالمات والسفر.',
+    image: '/images/product-headphones.svg',
+    images: ['/images/product-headphones.svg'],
+    originalPrice: 45.0,
+    price: 29.99,
+    discountPercent: 33,
+    stock: 45,
+    categoryId: 'headphones',
+    isBestseller: true,
+    isNew: false,
+    variants: [
+      { id: 'p1-v1', attributes: { color: 'Black' }, priceAdjustment: 0, stock: 20 },
+      { id: 'p1-v2', attributes: { color: 'White' }, priceAdjustment: 5, stock: 15 },
+      { id: 'p1-v3', attributes: { color: 'Blue' }, priceAdjustment: 5, stock: 10 },
+    ],
+  },
+  {
+    id: 'p2',
+    slug: 'smart-watch-series-6',
+    nameEn: 'Smart Watch Series 6',
+    nameAr: 'ساعة ذكية سيرييز 6',
+    descriptionEn: 'Advanced smartwatch with heart rate monitoring, GPS, blood oxygen measurement, and 7-day battery. Water-resistant and compatible with iOS and Android.',
+    descriptionAr: 'ساعة ذكية متقدمة مع مراقبة معدل ضربات القلب، ونظام تحديد المواقع، وقياس تشبع الأكسجين في الدم، وعمر بطارية 7 أيام. مقاومة للماء ومتوافقة مع iOS و Android.',
+    image: '/images/product-watch.svg',
+    images: ['/images/product-watch.svg'],
+    originalPrice: 120.0,
+    price: 89.99,
+    discountPercent: 25,
+    stock: 32,
+    categoryId: 'smartwatches',
+    isBestseller: true,
+    isNew: true,
+    badgeLabel: 'New',
+    variants: [
+      { id: 'p2-v1', attributes: { color: 'Black', size: '44mm' }, priceAdjustment: 0, stock: 15 },
+      { id: 'p2-v2', attributes: { color: 'Silver', size: '44mm' }, priceAdjustment: 10, stock: 10 },
+      { id: 'p2-v3', attributes: { color: 'Gold', size: '40mm' }, priceAdjustment: 15, stock: 7 },
+    ],
+  },
+  {
+    id: 'p3',
+    slug: 'bluetooth-speaker-mini',
+    nameEn: 'Bluetooth Speaker Mini',
+    nameAr: 'سبيكر بلوتوث ميني',
+    descriptionEn: 'Compact portable Bluetooth speaker with rich bass, IPX7 waterproof rating, and 12-hour playtime. Take your music anywhere.',
+    descriptionAr: 'م Speaker بلوتوث محمول صغير مع bass غني، وتصنيف مقاومة ماء IPX7، ووقت تشغيل 12 ساعة. خذ موسيقاك إلى أي مكان.',
+    image: '/images/product-speaker.svg',
+    images: ['/images/product-speaker.svg'],
+    originalPrice: 35.0,
+    price: 24.99,
+    discountPercent: 29,
+    stock: 68,
+    categoryId: 'gadgets',
+    isBestseller: false,
+    isNew: false,
+    variants: [
+      { id: 'p3-v1', attributes: { color: 'Black' }, priceAdjustment: 0, stock: 30 },
+      { id: 'p3-v2', attributes: { color: 'Red' }, priceAdjustment: 0, stock: 20 },
+      { id: 'p3-v3', attributes: { color: 'Blue' }, priceAdjustment: 0, stock: 18 },
+    ],
+  },
+  {
+    id: 'p4',
+    slug: 'smartphone-128gb-black',
+    nameEn: 'Smartphone 128GB Black',
+    nameAr: 'هاتف ذكي 128GB أسود',
+    descriptionEn: 'Latest smartphone with 128GB storage, 6.1-inch OLED display, triple camera system, and all-day battery life. Unlocked for all carriers.',
+    descriptionAr: 'هاتف ذكي حديث مع تخزين 128GB، وشاشة OLED بحجم 6.1 بوصة، ونظام كاميرا ثلاثي، وعمر بطارية طوال اليوم. غير مقفل لشركات الاتصال كافة.',
+    image: '/images/product-smartphone.svg',
+    images: ['/images/product-smartphone.svg'],
+    originalPrice: 299.0,
+    price: 229.99,
+    discountPercent: 23,
+    stock: 25,
+    categoryId: 'mobiles',
+    isBestseller: true,
+    isNew: false,
+    variants: [
+      { id: 'p4-v1', attributes: { storage: '128GB', color: 'Black' }, priceAdjustment: 0, stock: 15 },
+      { id: 'p4-v2', attributes: { storage: '256GB', color: 'Black' }, priceAdjustment: 50, stock: 8 },
+      { id: 'p4-v3', attributes: { storage: '128GB', color: 'Blue' }, priceAdjustment: 0, stock: 2 },
+    ],
+  },
+  {
+    id: 'p5',
+    slug: 'laptop-14-intel-core-i5',
+    nameEn: 'Laptop 14" Intel Core i5',
+    nameAr: 'لابتوب 14 بوصة مع معالج Core i5',
+    descriptionEn: '14-inch laptop with Intel Core i5 processor, 8GB RAM, 512GB SSD, and full HD display. Ideal for work, study, and everyday computing.',
+    descriptionAr: 'لابتوب 14 بوصة مع معالج Intel Core i5، وذاكرة وصول عشوائي 8GB، وقرص الحالة الصلبة 512GB، وشاشة full HD. مثالي للعمل والدراسة والحوسبة اليومية.',
+    image: '/images/product-laptop.svg',
+    images: ['/images/product-laptop.svg'],
+    originalPrice: 599.0,
+    price: 449.99,
+    discountPercent: 25,
+    stock: 18,
+    categoryId: 'laptops',
+    isBestseller: true,
+    isNew: false,
+    variants: [
+      { id: 'p5-v1', attributes: { ram: '8GB', storage: '512GB' }, priceAdjustment: 0, stock: 10 },
+      { id: 'p5-v2', attributes: { ram: '16GB', storage: '512GB' }, priceAdjustment: 100, stock: 5 },
+      { id: 'p5-v3', attributes: { ram: '16GB', storage: '1TB' }, priceAdjustment: 200, stock: 3 },
+    ],
+  },
+    { slug: 'tablet-pro-10-9',
+    id: 'tablet-pro-10-9',
+    nameEn: 'Tablet Pro 10.9"',
+    nameAr: 'تابليت برو 10.9 بوصة',
+    descriptionEn: '10.9-inch tablet with Retina display, A13 chip, 64GB storage, and all-day battery.',
+    descriptionAr: 'تابليت 10.9 بوصة مع شاشة ريتين، وشرائح A13، وتخزين 64GB، وعمر بطارية طوال اليوم.',
+    image: '/images/product-tablet.svg',
+    images: ['/images/product-tablet.svg'],
+    originalPrice: 499.0,
+    price: 399.99,
+    discountPercent: 20,
+    stock: 28,
+    categoryId: 'gadgets',
+    isBestseller: true,
+    isNew: false,
+    variants: [
+      { id: 'p9-v1', attributes: { storage: '64GB', color: 'Silver' }, priceAdjustment: 0, stock: 15 },
+      { id: 'p9-v2', attributes: { storage: '256GB', color: 'Silver' }, priceAdjustment: 80, stock: 8 },
+      { id: 'p9-v3', attributes: { storage: '64GB', color: 'Space Gray' }, priceAdjustment: 0, stock: 5 },
+    ],
+  },
+  {
+    id: 'p10',
+    slug: 'fitness-tracker-band',
+    nameEn: 'Fitness Tracker Band',
+    nameAr: 'شريط تتبع اللياقة البدنية',
+    descriptionEn: 'Fitness tracker with heart rate monitoring, sleep tracking, step counting, and 7-day battery.',
+    descriptionAr: 'شريط تتبع اللياقة مع مراقبة معدل ضربات القلب، وتتبع النوم، وحساب الخطوات، وعمر بطارية 7 أيام.',
+    image: '/images/product-fitness.svg',
+    images: ['/images/product-fitness.svg'],
+    originalPrice: 30.0,
+    price: 22.99,
+    discountPercent: 23,
+    stock: 85,
+    categoryId: 'smartwatches',
+    isBestseller: false,
+    isNew: false,
+    variants: [
+      { id: 'p10-v1', attributes: { color: 'Black' }, priceAdjustment: 0, stock: 40 },
+      { id: 'p10-v2', attributes: { color: 'Blue' }, priceAdjustment: 0, stock: 25 },
+      { id: 'p10-v3', attributes: { color: 'Pink' }, priceAdjustment: 0, stock: 20 },
+    ],
+  },
+  {
+    id: 'p11',
+    slug: 'gaming-mouse-wireless',
+    nameEn: 'Gaming Mouse Wireless',
+    nameAr: 'ماوس ألعاب لاسلكي',
+    descriptionEn: 'Wireless gaming mouse with 16000 DPI sensor, RGB lighting, programmable buttons, and 50-hour battery.',
+    descriptionAr: 'ماوس ألعاب لاسلكي مع حساس 16000 DPI، وإضاءة RGB، وأزرار قابلة للبرمجة، وعمر بطارية 50 ساعة.',
+    image: '/images/product-gaming-mouse.svg',
+    images: ['/images/product-gaming-mouse.svg'],
+    originalPrice: 65.0,
+    price: 49.99,
+    discountPercent: 23,
+    stock: 42,
+    categoryId: 'gaming',
+    isBestseller: false,
+    isNew: false,
+    variants: [
+      { id: 'p11-v1', attributes: { color: 'Black' }, priceAdjustment: 0, stock: 25 },
+      { id: 'p11-v2', attributes: { color: 'White' }, priceAdjustment: 0, stock: 17 },
+    ],
+  },
+  {
+    id: 'p12',
+    slug: 'portable-power-bank-20000mah',
+    nameEn: 'Portable Power Bank 20000mAh',
+    nameAr: 'محول طاقة محمول 20000mAh',
+    descriptionEn: '20000mAh power bank with dual USB outputs, fast charging, and LED indicator.',
+    descriptionAr: 'محول طاقة 20000mAh مع مخرجين USB، وشحن سريع، ومؤشر LED.',
+    image: '/images/product-powerbank.svg',
+    images: ['/images/product-powerbank.svg'],
+    originalPrice: 55.0,
+    price: 39.99,
+    discountPercent: 27,
+    stock: 60,
+    categoryId: 'accessories',
+    isBestseller: false,
+    isNew: true,
+    badgeLabel: 'New',
+    variants: [
+      { id: 'p12-v1', attributes: { color: 'Black' }, priceAdjustment: 0, stock: 35 },
+      { id: 'p12-v2', attributes: { color: 'White' }, priceAdjustment: 0, stock: 25 },
+    ],
+  },
+  {
+    id: 'p13',
+    slug: 'smart-home-hub',
+    nameEn: 'Smart Home Hub',
+    nameAr: 'محور منزل ذكي',
+    descriptionEn: 'Smart home hub compatible with Alexa, Google Assistant, and HomeKit.',
+    descriptionAr: 'محور منزل ذكي متوافق مع Alexa، وGoogle Assistant، وHomeKit.',
+    image: '/images/product-homehub.svg',
+    images: ['/images/product-homehub.svg'],
+    originalPrice: 120.0,
+    price: 89.99,
+    discountPercent: 25,
+    stock: 40,
+    categoryId: 'gadgets',
+    isBestseller: false,
+    isNew: true,
+    badgeLabel: 'New',
+    variants: [
+      { id: 'p13-v1', attributes: { color: 'White' }, priceAdjustment: 0, stock: 25 },
+      { id: 'p13-v2', attributes: { color: 'Black' }, priceAdjustment: 0, stock: 15 },
+    ],
+  },
+  {
+    id: 'p14',
+    slug: 'digital-camera-20mp',
+    nameEn: 'Digital Camera 20MP',
+    nameAr: 'كاميرا رقمية 20MP',
+    descriptionEn: '20MP digital camera with 10x optical zoom, 3-inch LCD, image stabilization, and full HD video recording.',
+    descriptionAr: 'كاميرا رقمية 20MP مع زووم بصري 10x، وشاشة LCD بحجم 3 بوصة، وثبات الصورة، وتسجيل فيديو full HD.',
+    image: '/images/product-camera.svg',
+    images: ['/images/product-camera.svg'],
+    originalPrice: 350.0,
+    price: 279.99,
+    discountPercent: 20,
+    stock: 22,
+    categoryId: 'gadgets',
+    isBestseller: false,
+    isNew: true,
+    badgeLabel: 'New',
+    variants: [
+      { id: 'p14-v1', attributes: { color: 'Black' }, priceAdjustment: 0, stock: 15 },
+      { id: 'p14-v2', attributes: { color: 'Silver' }, priceAdjustment: 0, stock: 7 },
+    ],
+  },
+  {
+    id: 'p15',
+    slug: 'ultrabook-13-i7-16gb',
+    nameEn: 'Ultrabook 13" i7 16GB',
+    nameAr: 'ألترابوك 13 بوصة i7 16GB',
+    descriptionEn: '13-inch ultrabook with Intel Core i7 processor, 16GB RAM, 1TB SSD, and lightweight design.',
+    descriptionAr: 'ألترابوك 13 بوصة مع معالج Intel Core i7، وذاكرة وصول عشوائي 16GB، وقرص SSD 1TB، وتصميم خفيف الوزن.',
+    image: '/images/product-laptop.svg',
+    images: ['/images/product-laptop.svg'],
+    originalPrice: 799.0,
+    price: 649.99,
+    discountPercent: 19,
+    stock: 12,
+    categoryId: 'laptops',
+    isBestseller: false,
+    isNew: false,
+    variants: [
+      { id: 'p15-v1', attributes: { ram: '16GB', storage: '1TB' }, priceAdjustment: 0, stock: 8 },
+      { id: 'p15-v2', attributes: { ram: '32GB', storage: '1TB' }, priceAdjustment: 150, stock: 4 },
+    ],
+  },
+];
+
+
+
+/** Get product by slug */
+export function getProductBySlug(slug: string): DemoProduct | undefined {
+  const extendedProduct = extendedProducts.find((p) => p.slug === slug || p.id === slug);
+  if (extendedProduct) return extendedProduct;
+
+  const product = allProducts.find((item) => item.id === slug);
+  return product && {
+    ...product,
+    slug: product.id,
+    stock: 1,
+  };
+}
+
+/** Get products by category ID */
+export function getProductsByCategory(categoryId: string): DemoProduct[] {
+  return extendedProducts.filter((p) => p.categoryId === categoryId);
+}
+
+/** Search products by query */
+export function searchProducts(query: string): DemoProduct[] {
+  const q = query.toLowerCase();
+  return extendedProducts.filter(
+    (p) =>
+      p.nameEn.toLowerCase().includes(q) ||
+      p.nameAr.toLowerCase().includes(q) ||
+      (p.descriptionEn?.toLowerCase().includes(q) ?? false) ||
+      (p.descriptionAr?.toLowerCase().includes(q) ?? false)
+  );
+}

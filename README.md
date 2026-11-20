@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# K DEALS
 
-## Getting Started
+K DEALS is a bilingual (English/Arabic) Kuwait marketplace built with Next.js,
+React, TypeScript, and Supabase. Prices are represented in KWD with three
+decimal places.
 
-First, run the development server:
+## Local development
+
+1. Copy `.env.example` to `.env.local` and provide only local/development
+   credentials.
+2. Install the locked dependencies with `npm ci`.
+3. Run `npm run dev` and open `http://localhost:3000/en` or
+   `http://localhost:3000/ar`.
+
+Quality checks:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx tsc --noEmit
+npm run lint
+npx next build --webpack
+git diff --check
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## CMS data sources
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The browser-local Stage 4 CMS and IndexedDB media library are the active
+source by default. `KDEALS_STOREFRONT_DATA_SOURCE=local` must remain set until
+an owner has completed the approved Supabase import, reconciliation, media
+validation, and storefront smoke test.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`KDEALS_STOREFRONT_DATA_SOURCE=supabase` enables the server-side public CMS
+snapshot. Published product images and documents are delivered through a
+same-origin route that verifies their public product relationship, signs and
+streams the private object server-side. The service-role key is server-only and
+must never use a `NEXT_PUBLIC_` prefix.
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+The reviewed deployment and rollback sequence for `kdealskuwait.com` is in
+[docs/vercel-deployment.md](docs/vercel-deployment.md). It deliberately stops
+before domain/DNS, production data migration, or storefront source cutover;
+those steps require explicit owner approval.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Security boundaries
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/admin` requires a verified Supabase session and an active database-backed
+  `admin_users` role.
+- Supabase RLS, not browser state, authorizes CMS changes.
+- Private product/media Storage is never made public to the browser.
+- Cart, wishlist, and the current local CMS are intentionally preserved during
+  the staged Supabase migration.

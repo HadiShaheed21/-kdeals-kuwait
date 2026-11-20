@@ -15,7 +15,6 @@ export function formatKwd(amount: number, locale: 'en' | 'ar' = 'en'): string {
 
 /** Format KWD amount in Arabic with Eastern Arabic numerals (RTL-safe). */
 export function formatKwdArabic(amount: number): string {
-  const formatted = Number(amount).toFixed(3);
   return `${arNum(amount)} د.ك`;
 }
 
