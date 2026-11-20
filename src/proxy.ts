@@ -39,6 +39,13 @@ export async function proxy(request: NextRequest) {
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/auth') || pathname.startsWith('/_') || pathname.startsWith('/api') || pathname.startsWith('/images') || pathname === '/favicon.ico') {
     response = NextResponse.next();
+  } else if (pathname === '/') {
+    // Keep the public entry point deterministic. Locale switching remains
+    // available at /ar, but a bare storefront URL always starts in English.
+    const url = request.nextUrl.clone();
+    url.pathname = '/en';
+    response = NextResponse.redirect(url);
+    response.cookies.set(COOKIE_NAME, 'en', { path: '/' });
   } else {
     const locale = getLocaleFromPath(pathname);
     const cookieLocale = request.cookies.get(COOKIE_NAME)?.value as Locale | undefined;
