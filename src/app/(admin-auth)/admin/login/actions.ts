@@ -1,11 +1,19 @@
+
 'use server';
 
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+
 import { getAdminAuthorization } from '@/lib/supabase/admin-auth';
 import { getRecoveryAuthorization } from '@/lib/supabase/recovery-auth';
-import { RECOVERY_COOKIE, recoveryCookieOptions } from '@/lib/supabase/recovery';
-import { createClient, SupabaseConfigurationError } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
+import {
+  RECOVERY_COOKIE,
+  recoveryCookieOptions,
+} from '@/lib/supabase/recovery';
+import {
+  createClient,
+  SupabaseConfigurationError,
+} from '@/lib/supabase/server';
 
 export interface LoginState {
   error?: string;
@@ -20,33 +28,120 @@ export interface ResetPasswordState {
   error?: string;
 }
 
-function safeAdminDestination(value: FormDataEntryValue | null): string {
+function safeAdminDestination(
+  value: FormDataEntryValue | null
+): string {
   if (typeof value !== 'string') return '/admin';
-  return value.startsWith('/admin') && !value.startsWith('//') ? value : '/admin';
+
+  if (
+    value.startsWith('/admin') &&
+    !value.startsWith('//') &&
+    !value.includes('\\')
+  ) {
+    return value;
+  }
+
+  return '/admin';
 }
 
-export async function signInAdmin(_previousState: LoginState, formData: FormData): Promise<LoginState> {
+function isValidEmail(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.trim().length > 3 &&
+    value.trim().length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+  );
+}
+
+function callbackRedirectUrl(
+  destination: '/admin' | '/admin/reset-password'
+): string | null {
+  const appUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (!appUrl) return null;
+
+  try {
+    const base = new URL(appUrl);
+
+    const isLocal =
+      base.hostname === 'localhost' ||
+      base.hostname === '127.0.0.1';
+
+    if (
+      base.protocol !== 'https:' &&
+      !(process.env.NODE_ENV !== 'production' &&
+        isLocal &&
+        base.protocol === 'http:')
+    ) {
+      return null;
+    }
+
+    const url = new URL('/auth/callback', base);
+    url.searchParams.set('next', destination);
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function recoveryRedirectUrl(): string | null {
+  return callbackRedirectUrl('/admin/reset-password');
+}
+
+function adminMagicLinkRedirectUrl(): string | null {
+  return callbackRedirectUrl('/admin');
+}
+
+// Legacy password login retained for compatibility.
+// The public admin entry point uses passwordless authentication.
+export async function signInAdmin(
+  _previousState: LoginState,
+  formData: FormData
+): Promise<LoginState> {
   const email = formData.get('email');
   const password = formData.get('password');
-  if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
-    return { error: 'Enter your email address and password.' };
+
+  if (!isValidEmail(email) || typeof password !== 'string' || !password) {
+    return {
+      error: 'Enter your email address and password.',
+    };
   }
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) return { error: 'Sign-in failed. Check your email and password.' };
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) {
+      return {
+        error: 'Sign-in failed. Check your credentials.',
+      };
+    }
 
     const authorization = await getAdminAuthorization();
+
     if (authorization.status !== 'authorized') {
       await supabase.auth.signOut();
-      return { error: 'This account is not authorized to access the admin dashboard.' };
+
+      return {
+        error:
+          'This account is not authorized to access the admin dashboard.',
+      };
     }
   } catch (error) {
     if (error instanceof SupabaseConfigurationError) {
-      return { error: 'Admin authentication is not configured on this deployment.' };
+      return {
+        error: 'Admin authentication is not configured.',
+      };
     }
-    return { error: 'Sign-in is temporarily unavailable. Please try again.' };
+
+    return {
+      error: 'Sign-in is temporarily unavailable.',
+    };
   }
 
   redirect(safeAdminDestination(formData.get('next')));
@@ -57,59 +152,141 @@ export async function signOutAdmin(): Promise<void> {
     const supabase = await createClient();
     await supabase.auth.signOut();
   } finally {
-    redirect('/admin/login');
+    redirect('/admin/request-access');
   }
 }
 
-function recoveryRedirectUrl(): string | null {
-  const appUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!appUrl) return null;
-  try {
-    const url = new URL('/auth/callback', appUrl);
-    if (url.protocol !== 'https:' && !(process.env.NODE_ENV !== 'production' && url.protocol === 'http:')) return null;
-    url.searchParams.set('next', '/admin/reset-password');
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
-export async function requestPasswordRecovery(_previousState: RecoveryRequestState, formData: FormData): Promise<RecoveryRequestState> {
+// Passwordless admin authentication.
+export async function requestAdminMagicLink(
+  formData: FormData
+): Promise<void> {
   const email = formData.get('email');
-  if (typeof email !== 'string' || !email.trim()) return { error: 'Enter your email address.' };
+  const redirectTo = adminMagicLinkRedirectUrl();
+
+  if (isValidEmail(email) && redirectTo) {
+    try {
+      const supabase = await createClient();
+
+      await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: redirectTo,
+          shouldCreateUser: false,
+        },
+      });
+    } catch {
+      // Do not reveal account existence.
+    }
+  }
+
+  redirect('/admin/request-access');
+}
+
+export async function requestPasswordRecovery(
+  _previousState: RecoveryRequestState,
+  formData: FormData
+): Promise<RecoveryRequestState> {
+  const email = formData.get('email');
+
+  if (!isValidEmail(email)) {
+    return { error: 'Enter a valid email address.' };
+  }
+
   const redirectTo = recoveryRedirectUrl();
-  if (!redirectTo) return { error: 'Password recovery is not configured on this deployment.' };
+
+  if (!redirectTo) {
+    return {
+      error: 'Password recovery is not configured.',
+    };
+  }
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
-    if (error) return { error: 'Unable to send a recovery email right now. Please try again.' };
-    // Keep the response identical for registered and unregistered addresses.
-    return { message: 'If this address belongs to an eligible administrator, a recovery link has been sent.' };
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim(),
+      { redirectTo }
+    );
+
+    if (error) {
+      return {
+        error: 'Unable to send a recovery email right now.',
+      };
+    }
+
+    return {
+      message:
+        'If this address belongs to an eligible administrator, a recovery link has been sent.',
+    };
   } catch (error) {
-    if (error instanceof SupabaseConfigurationError) return { error: 'Password recovery is not configured on this deployment.' };
-    return { error: 'Unable to send a recovery email right now. Please try again.' };
+    if (error instanceof SupabaseConfigurationError) {
+      return {
+        error: 'Password recovery is not configured.',
+      };
+    }
+
+    return {
+      error: 'Unable to send a recovery email right now.',
+    };
   }
 }
 
-export async function resetAdminPassword(_previousState: ResetPasswordState, formData: FormData): Promise<ResetPasswordState> {
+export async function resetAdminPassword(
+  _previousState: ResetPasswordState,
+  formData: FormData
+): Promise<ResetPasswordState> {
   const password = formData.get('password');
   const confirmPassword = formData.get('confirmPassword');
-  if (typeof password !== 'string' || password.length < 12) return { error: 'Use a password with at least 12 characters.' };
-  if (password !== confirmPassword) return { error: 'The passwords do not match.' };
+
+  if (
+    typeof password !== 'string' ||
+    password.length < 12
+  ) {
+    return {
+      error: 'Use a password with at least 12 characters.',
+    };
+  }
+
+  if (password !== confirmPassword) {
+    return {
+      error: 'The passwords do not match.',
+    };
+  }
 
   const authorization = await getRecoveryAuthorization();
-  if (authorization.status !== 'authorized') return { error: 'This recovery session is invalid or has expired. Request a new link.' };
+
+  if (authorization.status !== 'authorized') {
+    return {
+      error:
+        'This recovery session is invalid or has expired.',
+    };
+  }
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) return { error: 'Unable to update this password. Use a stronger password or request a new link.' };
+
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (error) {
+      return {
+        error: 'Unable to update this password.',
+      };
+    }
+
     const cookieStore = await cookies();
-    cookieStore.set(RECOVERY_COOKIE, '', { ...recoveryCookieOptions(), maxAge: 0 });
+
+    cookieStore.set(RECOVERY_COOKIE, '', {
+      ...recoveryCookieOptions(),
+      maxAge: 0,
+    });
+
     await supabase.auth.signOut();
   } catch {
-    return { error: 'Unable to update this password. Request a new link and try again.' };
+    return {
+      error: 'Unable to update this password.',
+    };
   }
 
   redirect('/admin/login?reset=success');

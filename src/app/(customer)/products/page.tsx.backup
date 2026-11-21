@@ -1,0 +1,107 @@
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { ProductCard } from '@/ui/products/ProductCard';
+import { getProductBySlug } from '@/services/products-extended';
+import { formatKwd } from '@/lib/currency';
+import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { useI18n } from '@/lib/i18n';
+import Image from 'next/image';
+import { Button } from '@/ui/primitives/Button';
+import { Badge } from '@/ui/primitives/Badge';
+import React from 'react';
+import { allProducts } from '@/services/products';
+
+interface ProductDetailPageProps {
+  params: { slug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const product = getProductBySlug(params.slug);
+  if (!product) return { title: 'Product — K DEALS' };
+  return {
+    title: `${product.nameEn} — K DEALS`,
+    description: product.descriptionEn || 'Shop at K DEALS Kuwait',
+  };
+}
+
+export default function ProductDetailPage({ params, searchParams }: ProductDetailPageProps) {
+  const { t } = useI18n();
+  const { add } = useCart();
+  const { toggle, isIn } = useWishlist();
+  const product = getProductBySlug(params.slug);
+
+  if (!product) {
+    notFound();
+  }
+
+  const selectedVariant = product.variants?.find((v) => v.id === searchParams.variant);
+  const [quantity, setQuantity] = React.useState(1);
+
+  const displayPrice = selectedVariant
+    ? formatKwd(product.price + selectedVariant.priceAdjustment)
+    : formatKwd(product.price);
+  const displayOriginalPrice = product.originalPrice > product.price
+    ? formatKwd(product.originalPrice)
+    : null;
+
+  const isInWishlist = isIn(product.id);
+  const isOutOfStock = selectedVariant ? selectedVariant.stock === 0 : product.stock === 0;
+
+  const handleAddToCart = () => {
+    const variant = selectedVariant;
+    const effectivePrice = variant ? product.price + variant.priceAdjustment : product.price;
+    const effectiveStock = variant ? variant.stock : product.stock;
+
+    if (effectiveStock <= 0) return;
+
+    add({
+      productId: product.id,
+      variantId: variant?.id,
+      name: product.nameEn,
+      nameAr: product.nameAr,
+      price: effectivePrice,
+      quantity,
+      image: product.image,
+      attributes: variant?.attributes,
+    });
+  };
+
+  const handleWishlistToggle = () => {
+    toggle(product.id);
+  };
+
+  const handleQuantityChange = (delta: number) => {
+    setQuantity((prev) => Math.max(1, prev + delta))
+  };
+
+  const variantOptions = product.variants?.map((v) => ({
+    ...v,
+    price: formatKwd(product.price + v.priceAdjustment),
+    stock: v.stock,
+  }))
+?? [];
+
+  const images = product.images ?? [product.image];
+
+  return (
+    <div className="container py-8">
+      <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
+        <a href="/" className="hover:text-orange-600">{t('common.home')}</a>
+        <span>/</span>
+        <span className="text-slate-900">{product.nameEn}</span>
+      </nav>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="flex flex-col gap-4">
+          <div className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100 shadow-sm border border-slate-200">
+            <Image src={images[0]} alt={product.nameEn} fill className="object-cover" priority />
+          </div>
+          {images.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {images.map((img, idx) => (
+                <div key={idx} className="rounded-xl overflow-hidden border border-slate-200 cursor-pointer">
+                  <Image src={img} alt={`${product.nameEn} - image ${idx + 1}`} fill className="object-cover" />
+                </div>
+              ))
+            }

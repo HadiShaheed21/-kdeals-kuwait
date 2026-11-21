@@ -18,7 +18,7 @@ async function AuthorizedAdminLayout({ children }: { children: ReactNode }) {
   await connection();
   const authorization = await getAdminAuthorization();
   if (authorization.status !== 'authorized') {
-    redirect('/admin/login');
+    redirect('/admin/request-access');
   }
 
   return (

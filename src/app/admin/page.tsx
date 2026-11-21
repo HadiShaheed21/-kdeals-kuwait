@@ -8,7 +8,7 @@ import { mediaRef, listMedia, saveMedia, updateMediaAlt, type MediaRecord } from
 import { formatKwd } from '@/lib/currency';
 import { MediaPicker } from '@/ui/media/MediaPicker';
 import { ManagedImage } from '@/ui/media/ManagedImage';
-import { attachRemoteProductMedia, loadRemoteAdminStore, saveRemoteCategory, saveRemoteProduct, saveRemoteStoreSettings } from './cms-actions';
+import { attachRemoteProductMedia, getRemoteCmsMode, loadRemoteAdminStore, saveRemoteCategory, saveRemoteProduct, saveRemoteStoreSettings } from './cms-actions';
 
 type View = 'overview' | 'products' | 'categories' | 'settings';
 type ProductDraft = Pick<AdminProduct, 'id' | 'nameEn' | 'nameAr' | 'categoryId' | 'price' | 'originalPrice' | 'stock' | 'image' | 'active' | 'isBestseller' | 'isNew' | 'featured' | 'trending' | 'flashSale' | 'displayOrder' | 'mediaIds' | 'documents' | 'variants'>;
@@ -16,7 +16,32 @@ const blankProduct = (categoryId: string): ProductDraft => ({ id: '', nameEn: ''
 
 export default function AdminPage() {
   const [view, setView] = useState<View>('overview'); const [store, setStore] = useState<AdminStoreData | null>(null); const [query, setQuery] = useState(''); const [draft, setDraft] = useState<ProductDraft | null>(null); const [editingId, setEditingId] = useState<string | null>(null); const [notice, setNotice] = useState('');
-  useEffect(() => { const sync = () => setStore(localAdminRepository.read()); sync(); void loadRemoteAdminStore().then((remote) => { if (remote.products.length || remote.categories.length || remote.banners.length) setStore(remote); }).catch(() => { /* Local rollback mode is expected outside the opted-in staging target. */ }); window.addEventListener('storage', sync); window.addEventListener('kdeals-admin-store', sync); return () => { window.removeEventListener('storage', sync); window.removeEventListener('kdeals-admin-store', sync); }; }, []);
+  useEffect(() => {
+    let mounted = true;
+    const sync = () => setStore(localAdminRepository.read());
+    sync();
+
+    // Production/local CMS must not invoke the staging-only remote loader.
+    void (async () => {
+      try {
+        if (!(await getRemoteCmsMode())) return;
+        const remote = await loadRemoteAdminStore();
+        if (mounted && (remote.products.length || remote.categories.length || remote.banners.length)) {
+          setStore(remote);
+        }
+      } catch {
+        // Preserve the browser-local CMS if staging is unavailable.
+      }
+    })();
+
+    window.addEventListener('storage', sync);
+    window.addEventListener('kdeals-admin-store', sync);
+    return () => {
+      mounted = false;
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('kdeals-admin-store', sync);
+    };
+  }, []);
   const update = (next: AdminStoreData, message = '') => { localAdminRepository.save(next); setStore(localAdminRepository.read()); setNotice(message); };
   if (!store) return <main className="min-h-screen bg-slate-50 p-6 text-slate-700">Loading development dashboard…</main>;
   const active = store.products.filter((p) => p.active); const low = active.filter((p) => p.stock <= 5); const products = store.products.filter((p) => p.nameEn.toLowerCase().includes(query.toLowerCase()) || p.id.includes(query));
